@@ -96,9 +96,11 @@ public class ReplicaDB {
                     // Catch exceptions before moving data
                     if (preSinkTasksFuture != null) {
                         try {
+                            LOG.info("Wait for preSinkTasks...");
                             preSinkTasksFuture.get(500, TimeUnit.MILLISECONDS);
                         } catch (TimeoutException e) {
                             // The preSinkTask is perfoming in the database
+                            LOG.info("preSinkTasks is still running...");
                         }
                     }
 
@@ -110,10 +112,15 @@ public class ReplicaDB {
                     // Run all Replicate Tasks
                     replicaTasksService = Executors.newFixedThreadPool(options.getJobs());
                     List<Future<Integer>> futures = replicaTasksService.invokeAll(replicaTasks);
+                    LOG.info("Started job pool #futures = "+futures.size());
+
                     for (Future<Integer> future : futures) {
                         // catch tasks exceptions
+                        LOG.info("Wait for future "+future);
                         future.get();
                     }
+
+                    LOG.info("Done waiting for futures.");
 
                     // wait for terminating
                     if (preSinkTasksFuture != null) {

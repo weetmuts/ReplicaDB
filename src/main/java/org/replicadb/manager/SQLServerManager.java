@@ -57,6 +57,14 @@ public class SQLServerManager extends SqlManager {
       stmt.close();
    }
 
+   private static int getRowCount(Statement stmt, String tableName) throws SQLException {
+       ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName);
+       rs.next();
+       int count = rs.getInt(1);
+       rs.close();
+       return count;
+   }
+
    @Override
    public int insertDataToTable (ResultSet resultSet, int taskId) throws SQLException {
 
@@ -99,6 +107,7 @@ public class SQLServerManager extends SqlManager {
       }
 
       LOG.debug("Performing BulkCopy into {} ", tableName);
+
       try {
          // Write from the source to the destination.
          // If the source ResulSet is an implementation of RowSet (e.g. csv file) cast it.
@@ -122,7 +131,7 @@ public class SQLServerManager extends SqlManager {
       // TODO: getAllSinkColumns should not update the sinkColumns property. Change it in Oracle and check it in Postgres
       // Set Sink columns
       getAllSinkColumns(rsmd);
-      
+
       this.getConnection().commit();
       return getNumFetchedRows(resultSet);
    }
@@ -147,8 +156,8 @@ public class SQLServerManager extends SqlManager {
             numFetchedRows = 0;
          }
       } else if (resultSet instanceof CsvCachedRowSetImpl) {
-         numFetchedRows = ((CsvCachedRowSetImpl) resultSet).getRowCount();         
-      } else if (resultSet instanceof MongoDBRowSetImpl) {         
+         numFetchedRows = ((CsvCachedRowSetImpl) resultSet).getRowCount();
+      } else if (resultSet instanceof MongoDBRowSetImpl) {
          numFetchedRows = ((MongoDBRowSetImpl) resultSet).getRowCount();
       }
 
